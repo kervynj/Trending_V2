@@ -3,6 +3,7 @@ from database_interface import database_interface
 from date_pricing import historical_pricing
 import urllib
 import csv
+import get_quotes
 
 
 class trending_value_screen():
@@ -19,73 +20,64 @@ class trending_value_screen():
         #begin database instance
         self.dtb = database_interface()
 
+
     def api_data_fetch(self,ticker):
 
         findata = {}
-
-
         file = self.StatPage + ticker + '&f=' + 'nrp5p6yj1j4'
+        status = True
+        try:
+            file_object = urllib.urlopen(file)
+            reader = csv.reader(file_object)
+        except IOError as e:
+            print e
+            status = False
 
-        #print file
-
-        file_object = urllib.urlopen(file)
-        reader = csv.reader(file_object)
         j = 0
-        for row in reader:
+        if status:
+            for row in reader:
+                findata[self.key[0]] = row[0]
+                findata[self.key[1]] = str(self.CurrentDate)
 
-            findata[self.key[0]] = row[0]
-            findata[self.key[1]] = str(self.CurrentDate)
+                for i in range(1,5):
+                    try:
+                        if row[i] == 'N/A':
+                            findata[self.key[i]] = row[i]
+                        else:
+                            findata[self.key[i]] = round(float(row[i]),3)
+                    except ValueError:
+                        print 'Yahoo Finance error for {}..'.format(ticker)
 
-            for i in range(1,5):
-                if row[i] == 'N/A':
-                    #print ticker
-                    findata[self.key[i]] = row[i]
-                else:
-                    findata[self.key[i]] = round(float(row[i]),3)
-
-
-
-            #assign mc/ebitda
-            try:
-                if row[5] != 'N/A':
-                    mc = row[5].split('M')
-                    if len(mc) == 2:
-                        findata['MC/EBITDA'] = round(float(mc[0])*10**6)
+                #assign mc/ebitda
+                try:
+                    if row[5] != 'N/A':
+                        mc = row[5].split('M')
+                        if len(mc) == 2:
+                            findata['MC/EBITDA'] = round(float(mc[0])*10**6)
+                        else:
+                            mc = row[5].split('B')
+                            findata['MC/EBITDA'] = round(float(mc[0])*10**9)
                     else:
-                        mc = row[5].split('B')
-                        findata['MC/EBITDA'] = round(float(mc[0])*10**9)
-                else:
-                    print 'No mc/ebitda data for %s' %(ticker)
+                        print 'No mc/ebitda data for %s' %(ticker)
+                except (IndexError,ValueError):
+                    print 'Error' + file
 
-            except (IndexError,ValueError):
-                print 'Error' + file
-
-        #print findata
+            #print findata
         return findata
+
 
     def sixmonth(self,ticker,date_list):
         #Returns current and previous price for a company based on passed ticker symbol and list of dates
         prices = []
 
-        for d_obj in date_list:
+        status, prices = get_quotes.download_quotes(ticker, date_list[1], date_list[0])
 
-            file = self.BasePage + ticker +'&d='+ str(d_obj.month-1)+'&e='+ str(d_obj.day)+'&f='+str(d_obj.year)+'&g=d&a='+str(d_obj.month-1)+'&b='+ str(d_obj.day) + '&c=' + str(d_obj.year) + '&ignore=.csv'
-            file_object = urllib.urlopen(file)
-            pricereader = csv.DictReader(file_object)
-
-            for row in pricereader:
-                try:
-                    prices.append(float(row['Adj Close']))
-                except KeyError:
-                    print 'No price value for %s on %s' %(ticker,str(d_obj))
-                    break
-
-        #calculate price change
-        try:
-            chng = round(((prices[0]-prices[1])/prices[1])*100,2)
+        if status:
+            chng = round(((prices[1]-prices[0])/prices[0])*100,2)
             return chng
-        except IndexError:
-            print 'Not enough data for' + ticker
+        else:
+            print 'No price history for - ' + ticker
+
 
     def tsx_ticker_list(self):
 
@@ -93,6 +85,7 @@ class trending_value_screen():
         companies = self.dtb.db_fetch(query)
 
         return companies
+
 
     def upload(self,ticker,data_dict):
 
@@ -104,8 +97,7 @@ class trending_value_screen():
             except KeyError:
                 query += 'N/A' + "','"
 
-        query += data_dict['Six Month Change'] + "','"
-        query = query[:-2] + ')'
+        query += data_dict['Six Month Change'] + "')"
 
 
         #print query
@@ -130,7 +122,6 @@ class trending_value_screen():
         prev_obj = self.hp.MonthDate(date_obj,6)
 
         l = self.tsx_ticker_list()
-
 
         for ticker in l:
             d = self.api_data_fetch(ticker[0])
