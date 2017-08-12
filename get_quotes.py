@@ -93,6 +93,7 @@ def get_data(symbol, start_date, end_date, cookie, crumb):
                 elif row['Date'] == str(end_date):
                     prices.append(float(row['Adj Close']))
                 elif 'error' in row['High']:
+                    print row
                     break
         except ValueError as e:
             print e
