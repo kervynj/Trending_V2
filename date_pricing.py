@@ -7,6 +7,20 @@ class historical_pricing:
     def __init__(self):
         self.m = [[0,31],[1,28],[2,31],[3,30],[4,31],[5,30],[6,31],[7,31],[8,30],[9,31],[10,30],[11,31]]
 
+    def CurrentDateAdjustement(self, Date):
+
+        currentDate = self.DateAdjustment(Date)
+
+        if currentDate == date.today():
+
+            try:
+                causalDate = date(currentDate.year, currentDate.month, currentDate.day-1)
+            except ValueError: #currentDate is first of the month
+                causalDate = date(currentDate.year, (currentDate.month-1), self.m[currentDate.month-2][1])
+
+            causalDate = self.DateAdjustment(causalDate)
+
+        return causalDate
 
     def DateAdjustment(self,Date):
 
@@ -28,6 +42,8 @@ class historical_pricing:
         self.Previous_Year = RefYear
         self.Previous_Month = RefMonth
         self.Previous_Date_obj = date(RefYear,RefMonth,RefDay)
+
+
         return self.Previous_Date_obj
 
 

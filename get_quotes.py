@@ -87,7 +87,8 @@ def get_data(symbol, start_date, end_date, cookie, crumb):
         try:
             data = response.iter_lines()
             csv_obj = csv.DictReader(data, fieldnames=headers)
-            for row in csv_obj:
+            l = [i for i in csv_obj]
+            for row in l:
                 if row['Date'] == str(start_date):
                     prices.append(float(row['Adj Close']))
                 elif row['Date'] == str(end_date):
