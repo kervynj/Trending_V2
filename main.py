@@ -207,7 +207,7 @@ class trending_value_screen():
             self.score_assign(d, metric)
 
         # rank 6 month change
-        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results_2` where `Six Month Change` <> 0 order by `Six Month Change`"
+        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results_2` where `Date` = '{}' AND `Six Month Change` <> 0 order by `Six Month Change`".format(str(date))
         d = self. dtb.db_fetch(query)
         self.sixmonth_score(d)
 
