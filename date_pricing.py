@@ -1,4 +1,5 @@
 from datetime import date,datetime, timedelta
+import holidays
 
 
 
@@ -6,6 +7,8 @@ class historical_pricing:
 
     def __init__(self):
         self.m = [[0,31],[1,28],[2,31],[3,30],[4,31],[5,30],[6,31],[7,31],[8,30],[9,31],[10,30],[11,31]]
+        self.cdn_holidays = holidays.Canada()
+
 
     def CurrentDateAdjustement(self, Date):
 
@@ -19,8 +22,10 @@ class historical_pricing:
                 causalDate = date(currentDate.year, (currentDate.month-1), self.m[currentDate.month-2][1])
 
             causalDate = self.DateAdjustment(causalDate)
+            causalDate = self.holiday_check(causalDate)
 
         return causalDate
+
 
     def DateAdjustment(self,Date):
 
@@ -41,10 +46,27 @@ class historical_pricing:
         self.Previous_Day = RefDay
         self.Previous_Year = RefYear
         self.Previous_Month = RefMonth
-        self.Previous_Date_obj = date(RefYear,RefMonth,RefDay)
-
+        self.Previous_Date_obj = self.holiday_check(date(RefYear,RefMonth,RefDay))
 
         return self.Previous_Date_obj
+
+
+    def holiday_check(self, Date):
+
+        weekday = Date.weekday()
+        day = Date.day
+        month = Date.month
+        year = Date.year
+
+        if Date in self.cdn_holidays:
+            if weekday == 0:
+                day = Date.day - 3
+            elif weekday == 4:
+                day = Date.day -1
+
+            Date = date(year, month, day)
+
+        return Date
 
 
     def MonthDate(self,Date,key):

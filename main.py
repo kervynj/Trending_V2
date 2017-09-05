@@ -1,4 +1,4 @@
-from datetime import date,datetime, timedelta
+from datetime import date
 from database_interface import database_interface
 from date_pricing import historical_pricing
 import urllib
@@ -46,7 +46,7 @@ class trending_value_screen():
                             findata[self.key[i]] = row[i]
                         else:
                             findata[self.key[i]] = round(float(row[i]),3)
-                    except ValueError:
+                    except (ValueError, IndexError):
                         print 'Yahoo Finance error for {}..'.format(ticker)
 
                 #assign mc/ebitda
