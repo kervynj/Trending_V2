@@ -13,7 +13,7 @@ class trending_value_screen():
 
         #api_data_fetch variables
         self.StatPage = 'http://finance.yahoo.com/d/quotes.csv?s='
-        self.key = ['Description', 'Price/Earnings', 'Price/Sales', 'Price/Book', 'DY', 'MC/EBITDA']
+        self.key = ['Description', 'Price/Earnings', 'Price/Sales', 'Price/Book', 'DY', 'EBITDA/MC']
 
         #six_month variables
         self.BasePage = 'http://finance.yahoo.com/table.csv?s='
@@ -27,6 +27,8 @@ class trending_value_screen():
         findata = {}
         file = self.StatPage + ticker + '&f=' + 'nrp5p6yj1j4'
         status = True
+        mc_ebitda = []
+
         try:
             file_object = urllib.urlopen(file)
             reader = csv.reader(file_object)
@@ -49,19 +51,30 @@ class trending_value_screen():
                     except (ValueError, IndexError):
                         print 'Yahoo Finance error for {}..'.format(ticker)
 
-                #assign mc/ebitda
-                try:
-                    if row[5] != 'N/A':
-                        mc = row[5].split('M')
-                        if len(mc) == 2:
-                            findata['MC/EBITDA'] = round(float(mc[0])*10**6)
+                # assign EBITDA/MC - higher the better
+                # fetch and convert mc to decimal format
+                    for index in [6, 5]: # 6 - EBITDA, 5 - market cap
+                    try:
+                        if row[index] not in ['N/A', '0.00']:
+                            val = row[index].split('M')
+                            if len(val) == 2:
+                                val = round(float(val[0])*10**6)
+                            else:
+                                val = row[5].split('B')
+                                val = round(float(val[0])*10**9)
+
+                            mc_ebitda.append(val)
+
                         else:
-                            mc = row[5].split('B')
-                            findata['MC/EBITDA'] = round(float(mc[0])*10**9)
-                    else:
-                        print 'No mc/ebitda data for %s' %(ticker)
-                except (IndexError,ValueError):
-                    print 'Error' + file
+                            print 'No EBITDA/mc data for %s' %(ticker)
+                    except (IndexError,ValueError):
+                        print 'Error' + file
+
+                if len(mc_ebitda) ==2:
+                    findata["EBITDA/MC"] = mc_ebitda[0]/mc_ebitda[1]
+                else:
+                    print "Cannot calculate EBITDA/MC value"
+                    findata["EBITDA/MC"] = 0
 
         return findata
 
@@ -96,7 +109,7 @@ class trending_value_screen():
                    'Price/Sales': 0,
                    'Price/Book': 0,
                    'Dividend Yield': 1,
-                   'MC/EBITDA': 0,
+                   'EBITDA/MC': 1,
                    'Six Month Change': 1
                    }
 
@@ -177,7 +190,7 @@ class trending_value_screen():
 
     def upload(self,ticker,data_dict):
 
-        query = "INSERT INTO `results_2`(`Ticker`, `Date`,`Description`,`Price/Earnings`, `Price/Sales`, `Price/Book`, `Dividend Yield`, `MC/EBITDA`, `Six Month Change`) VALUES ('"+ ticker[0] +"','" + str(self.CurrentDate)+"','"
+        query = "INSERT INTO `results_2`(`Ticker`, `Date`,`Description`,`Price/Earnings`, `Price/Sales`, `Price/Book`, `Dividend Yield`, `EBITDA/MC` , `Six Month Change`) VALUES ('"+ ticker[0] +"','" + str(self.CurrentDate)+"','"
 
         for entry in self.key:
             try:
@@ -197,7 +210,7 @@ class trending_value_screen():
                    'Price/Sales',
                    'Price/Book',
                    'Dividend Yield',
-                   'MC/EBITDA',
+                   'EBITDA/MC',
                    ]
 
         for metric in metrics:
