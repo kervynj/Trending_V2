@@ -1,4 +1,6 @@
 from datetime import date
+import datetime
+import time
 from database_interface import database_interface
 from date_pricing import historical_pricing
 import urllib
@@ -48,12 +50,14 @@ class trending_value_screen():
                             findata[self.key[i]] = row[i]
                         else:
                             findata[self.key[i]] = round(float(row[i]),3)
-                    except (ValueError, IndexError):
+                    except ValueError:
                         print 'Yahoo Finance error for {}..'.format(ticker)
+                    except IndexError:
+                        print 'Yahoo Finance API temporary offline'
 
                 # assign EBITDA/MC - higher the better
                 # fetch and convert mc to decimal format
-                    for index in [6, 5]: # 6 - EBITDA, 5 - market cap
+                for index in [6, 5]: # 6 - EBITDA, 5 - market cap
                     try:
                         if row[index] not in ['N/A', '0.00']:
                             val = row[index].split('M')
@@ -243,6 +247,9 @@ class trending_value_screen():
         l = self.tsx_ticker_list()
 
         for ticker in l:
+
+            delay = float(str(datetime.datetime.now()).split(":")[2])/1000    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
+            time.sleep(delay)
             d = self.api_data_fetch(ticker[0])
             price_change = self.sixmonth(ticker[0],[date_obj,prev_obj])
             d['Six Month Change'] = str(price_change)
