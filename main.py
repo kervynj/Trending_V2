@@ -42,7 +42,7 @@ class trending_value_screen():
         if status:
             for row in reader:
                 findata[self.key[0]] = row[0]
-                findata[self.key[1]] = str(self.CurrentDate)
+                findata[self.key[1]] = str(self.date_obj)
 
                 for i in range(1,5):
                     try:
@@ -117,20 +117,30 @@ class trending_value_screen():
                    'Six Month Change': 1
                    }
 
-        sample_size = len(data)
+        sample_size = float(len(data))
         print "scoring " + metric
 
         for index, company in enumerate(data):
 
-            if company[3] not in [0.0, 'N/A']:
-                if key == True:
-                    applicable = float(sample_size-index)
-                rank = abs((1*metrics[metric]-(sample_size-index)/applicable))*80+20
-                key = False
+            if metric != "EBITDA/MC":
+
+                if company[3] not in [0.0, 'N/A']:
+                    if key == True:
+                        applicable = float(sample_size-index)
+                    rank = abs((1*metrics[metric]-(sample_size-index)/applicable))*80+20
+                    key = False
+
+                else:
+                    rank = 20
+                    key = True
 
             else:
-                rank = 20
-                key = True
+                rank = abs((1*metrics[metric]-(sample_size-index)/sample_size))*80+20
+
+
+
+
+
 
             if metric == 'Price/Earnings':
                 query = "Insert into `rankings_2` (`Ticker`, `Date`, `Description`, `{0}`) VALUES('{1}', '{2}', '{3}', '{4}')".format(metric,
@@ -240,26 +250,27 @@ class trending_value_screen():
         self.hp = historical_pricing()
 
         #Adjust current date to business day
-        date_obj = self.hp.CurrentDateAdjustement(self.CurrentDate)
+        self.date_obj = self.hp.CurrentDateAdjustement(self.CurrentDate)
         #Fetch previous date obj
-        prev_obj = self.hp.MonthDate(date_obj,6)
+        prev_obj = self.hp.MonthDate(self.date_obj,6)
 
         l = self.tsx_ticker_list()
 
-        for ticker in l:
+        # for ticker in l:
+        #
+        #     delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
+        #     time.sleep(delay)
+        #     d = self.api_data_fetch(ticker[0])
+        #     price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
+        #     d['Six Month Change'] = str(price_change)
+        #
+        #     if d['Six Month Change'] != 'NULL':
+        #         self.upload(ticker, d)
 
-            delay = float(str(datetime.datetime.now()).split(":")[2])/1000    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
-            time.sleep(delay)
-            d = self.api_data_fetch(ticker[0])
-            price_change = self.sixmonth(ticker[0],[date_obj,prev_obj])
-            d['Six Month Change'] = str(price_change)
-
-            if d['Six Month Change'] != 'NULL':
-                self.upload(ticker, d)
-
-        self.data_ranker(date_obj)
+        self.data_ranker(self.CurrentDate)
 
 
 
-x = trending_value_screen()
-x.main()
+if __name__ == "__main":
+
+    trending_value_screen.main()

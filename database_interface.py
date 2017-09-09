@@ -7,6 +7,9 @@ class database_interface():
 
         self.db = MySQLdb.connect(host="127.0.0.1",port =3306,user="root",passwd="",db="test")
 
+        if self.db:
+            print "successfully connected to service"
+
         self.cursor = self.db.cursor()
 
 
