@@ -24,6 +24,9 @@ class historical_pricing:
             causalDate = self.DateAdjustment(causalDate)
             causalDate = self.holiday_check(causalDate)
 
+        else:
+            causalDate = currentDate
+
         return causalDate
 
 

@@ -31,6 +31,15 @@ class api(object):
         companies = self.dtb.db_fetch(query)
         return companies
 
+    def company_financials(self, ticker, date):
+
+        query = "Select `Price/Earnings`, `Price/Sales`, `Price/Book`, `Dividend Yield`, `EBITDA/MC`, `Six Month Change`" \
+                "from `results_2` where `Ticker` = '{0}' AND `Date` = '{1}'".format(ticker, date)
+
+        info = self.dtb.db_fetch(query)
+
+        return info
+
 
 
 
