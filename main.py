@@ -228,7 +228,7 @@ class trending_value_screen():
 
         for metric in metrics:
 
-            query = base_query.format(metric, str(self.date_obj), metric)
+            query = base_query.format(metric, str(date), metric)
             d = self.dtb.db_fetch(query)
             self.score_assign(d, metric)
 
@@ -238,7 +238,7 @@ class trending_value_screen():
         self.sixmonth_score(d)
 
         #tally overall scores
-        self.overall_score(str(self.date_obj))
+        self.overall_score(str(date))
 
 
     def main(self):
@@ -255,16 +255,16 @@ class trending_value_screen():
 
         l = self.tsx_ticker_list()
 
-        # for ticker in l:
-        #
-        #     delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
-        #     time.sleep(delay)
-        #     d = self.api_data_fetch(ticker[0])
-        #     price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
-        #     d['Six Month Change'] = str(price_change)
-        #
-        #     if d['Six Month Change'] != 'NULL':
-        #         self.upload(ticker, d)
+        for ticker in l:
+
+            delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
+            time.sleep(delay)
+            d = self.api_data_fetch(ticker[0])
+            price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
+            d['Six Month Change'] = str(price_change)
+
+            if d['Six Month Change'] != 'NULL':
+                self.upload(ticker, d)
 
         self.data_ranker(self.CurrentDate)
 

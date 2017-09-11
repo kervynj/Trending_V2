@@ -19,9 +19,9 @@ class trending_GUI(object):
         
         self.messagebarset()
         self.buttonset()
-        self.date_scroll = Listbox(self.leftframe, height='2')
+        self.date_scroll = Listbox(self.leftframe, height='3')
         self.date_scroll.grid(row=2, column=0, columnspan=3)
-        self.datascroll = Listbox(self.rightframe, width="50")
+        self.datascroll = Listbox(self.rightframe, width="75")
         self.datascroll.pack()
         self.get_info_button = Button(self.rightframe, text="Get Info", command=self.getInfo)
         self.get_info_button.pack(side=BOTTOM)
@@ -40,7 +40,7 @@ class trending_GUI(object):
 
     def messagebarset(self):
 
-        self.textbox = Text(self.leftframe, height='2', width='50', fg='Blue')
+        self.textbox = Text(self.leftframe, height='5', width='60', fg='Blue')
         self.textbox.grid(row=0, column=0, columnspan=3)
 
 
