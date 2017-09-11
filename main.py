@@ -226,14 +226,14 @@ class trending_value_screen():
                    'EBITDA/MC',
                    ]
 
-        for metric in metrics:
-
-            query = base_query.format(metric, str(date), metric)
-            d = self.dtb.db_fetch(query)
-            self.score_assign(d, metric)
+        # for metric in metrics:
+        #
+        #     query = base_query.format(metric, str(date), metric)
+        #     d = self.dtb.db_fetch(query)
+        #     self.score_assign(d, metric)
 
         # rank 6 month change
-        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results_2` where `Date` = '{}' AND `Six Month Change` <> 0 order by `Six Month Change`".format(str(self.date_obj))
+        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results_2` where `Date` = '{}' AND `Six Month Change` <> 0 order by `Six Month Change`".format(str(self.CurrentDate))
         d = self.dtb.db_fetch(query)
         self.sixmonth_score(d)
 
@@ -255,16 +255,16 @@ class trending_value_screen():
 
         l = self.tsx_ticker_list()
 
-        for ticker in l:
-
-            delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
-            time.sleep(delay)
-            d = self.api_data_fetch(ticker[0])
-            price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
-            d['Six Month Change'] = str(price_change)
-
-            if d['Six Month Change'] != 'NULL':
-                self.upload(ticker, d)
+        # for ticker in l:
+        #
+        #     delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
+        #     time.sleep(delay)
+        #     d = self.api_data_fetch(ticker[0])
+        #     price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
+        #     d['Six Month Change'] = str(price_change)
+        #
+        #     if d['Six Month Change'] != 'NULL':
+        #         self.upload(ticker, d)
 
         self.data_ranker(self.CurrentDate)
 
