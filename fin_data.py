@@ -1,6 +1,7 @@
 from morning_star import MorningStar
-# from mitches_dumb_script import get_price_data
+from price_fetch import quotes
 import pprint
+import datetime
 
 
 
@@ -15,8 +16,8 @@ class FinData():
 
 	def get_key_metrics(self):
 
-		self.key_ratios = self.ms.get_key_ratios_data(self.ticker)
-		self.income_statement = self.ms.get_income_statement(self.ticker)
+		self.key_ratios = self.ms.get_key_ratios_data(ticker=self.ticker)
+		self.income_statement = self.ms.get_income_statement(ticker=self.ticker)
 		self.earnings_per_share = float(self.income_statement["earnings_per_share"]["Diluted"])
 		self.revenue = float(self.income_statement["general"]["Revenue"])
 		self.shares_outstanding = float(self.income_statement["shares_outstanding"]["Diluted"])
@@ -25,8 +26,18 @@ class FinData():
 		self.dividend_per_share = float(self.key_ratios["financials"]["Dividends USD"])
 		self.EBITDA = float(self.income_statement["shares_outstanding"]["EBITDA"])
 
-		# self.price = get_price_data(self.ticker)
-		self.price = 100
+		pprint.pprint(self.income_statement)
+		pprint.pprint(self.earnings_per_share)
+		pprint.pprint(self.key_ratios)
+
+		self.quotes = quotes()
+		today = datetime.datetime.now()
+		today_formatted = today.strftime("%Y-%m-%d")
+
+
+		print(today_formatted)
+		self.price = self.quotes.price_fetch(self.ticker, "2018-09-07")[1][0]
+		print(self.price)
 		return_dict = {}
 		return_dict["Price/Earnings"] = self.price/self.earnings_per_share
 		return_dict["Price/Sales"] = self.price*self.shares_outstanding/self.revenue
