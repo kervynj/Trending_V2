@@ -6,6 +6,7 @@ import time
 import random
 import csv
 import json
+import sys
 
 
 class FinData():
@@ -71,7 +72,7 @@ def read_write_ticks():
 
 		random.shuffle(ticks)
 		failed = []
-		max_tries = 5
+		max_tries = 2
 		for tick_i in ticks:
 
 			if tick_i in already_found.keys():
@@ -79,15 +80,21 @@ def read_write_ticks():
 			
 			trys = 0
 			while trys < max_tries:
+				# progress = float(len(already_found.keys()))/float(len(ticks))
+				found = len(already_found.keys())
+				total = len(ticks)
+				progress = 100*float(found)/float(total)
+				sys.stdout.write("Trying Ticker %s Progress: %0.2f%%\tfound( %i ) / total( %i )\r" % (tick_i, progress, found, total) )
+				sys.stdout.flush()
 				try:
 					delay = float(random.randint(1, 1000))/10000
-					print("Sleeping for %s sec"%delay)
+					# print("Sleeping for %s sec"%delay)
 					time.sleep(delay)
-					print("Trying %s"%tick_i)
+					# print("Trying %s"%tick_i)
 					fd = FinData(tick_i)
 					res = fd.get_key_metrics()
 
-					pprint.pprint(res)
+					# pprint.pprint(res)
 					already_found[tick_i] = res
 					trys = 0
 					break
@@ -95,7 +102,7 @@ def read_write_ticks():
 				except Exception:
 					
 					trys += 1
-					print("Failed for %s\ttry: %i"%(tick_i, trys))
+					# print("Failed for %s\ttry: %i"%(tick_i, trys))
 					if trys == max_tries:
 						failed.append(tick_i)
 
@@ -120,5 +127,5 @@ def read_write_ticks():
 
 if __name__ == "__main__":
 	
-
-	read_write_ticks()
+	for i in range(1):
+		read_write_ticks()
