@@ -18,6 +18,7 @@ class FinData():
 
 		self.key_ratios = self.ms.get_key_ratios_data(ticker=self.ticker)
 		self.income_statement = self.ms.get_income_statement(ticker=self.ticker)
+		pprint.pprint(self.income_statement)
 		self.earnings_per_share = float(self.income_statement["earnings_per_share"]["Diluted"])
 		self.revenue = float(self.income_statement["general"]["Revenue"])
 		self.shares_outstanding = float(self.income_statement["shares_outstanding"]["Diluted"])
@@ -26,7 +27,7 @@ class FinData():
 		self.dividend_per_share = float(self.key_ratios["financials"]["Dividends USD"])
 		self.EBITDA = float(self.income_statement["shares_outstanding"]["EBITDA"])
 
-		pprint.pprint(self.income_statement)
+		
 		pprint.pprint(self.earnings_per_share)
 		pprint.pprint(self.key_ratios)
 
@@ -52,7 +53,7 @@ class FinData():
 
 if __name__ == "__main__":
 
-	fd = FinData("AAPL")
+	fd = FinData("ABB")
 	res = fd.get_key_metrics()
 
 	pprint.pprint(res)

@@ -75,8 +75,10 @@ class MorningStar():
 		return_dict = {}
 		return_dict["general"] = self.helper(df, 0, 4)
 		return_dict["operating_expenses"] = self.helper(df, 5, 16)
-		return_dict["earnings_per_share"] = self.helper(df, 18, 20)
-		return_dict["shares_outstanding"] = self.helper(df, 21, 24)
+
+		eps_ix = df.index[df[0] == "Earnings per share"].item() + 1
+		return_dict["earnings_per_share"] = self.helper(df, eps_ix, eps_ix+2)
+		return_dict["shares_outstanding"] = self.helper(df, eps_ix+4, eps_ix+7)
 		return return_dict
 
 	def helper(self, df, start, stop):
@@ -111,7 +113,9 @@ class MorningStar():
 		df = self.get_data(url)
 
 		return_dict = {}
-		return_dict["free_cash_flow"] = self.helper(df, 35, 38)
+
+		ix = df.index[df[0] == "Free Cash Flow"].item() + 1
+		return_dict["free_cash_flow"] = self.helper(df, ix, ix+3)
 		return return_dict
 
 
