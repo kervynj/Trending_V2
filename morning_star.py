@@ -9,6 +9,7 @@ class MorningStar():
 
 
 	def __init__(self):
+		self.cookies = None
 		pass
 
 
@@ -44,12 +45,16 @@ class MorningStar():
 
 	def get_data(self, url):
 
-
-		resp = requests.get(url)
+		if self.cookies:
+			resp = requests.get(url, cookies=self.cookies)
+		else:
+			resp = requests.get(url)
+		self.cookies = resp.cookies
 		lines = []
 		for line in csv.reader(resp.iter_lines()):
 			lines.append(line)
 		if len(lines) == 0:
+
 			raise IOError("Did not get a response from website")
 
 		df = pd.DataFrame(lines)
@@ -96,7 +101,6 @@ class MorningStar():
 		df = self.get_data(url)
 
 		return_dict = {}
-
 		return_dict["financials"] = self.helper(df, 1, 17)
 		return_dict["key_ratios"] = self.helper(df, 19, 29)
 		return_dict["profitability"] = self.helper(df, 30, 39)
