@@ -5,7 +5,7 @@ class database_interface():
 
     def __init__(self):
 
-        self.db = MySQLdb.connect(host="127.0.0.1",port =3306,user="root",passwd="",db="test")
+        self.db = MySQLdb.connect(host="127.0.0.1",port =3306,user="root",passwd="",db="trending_value")
 
         if self.db:
             print "successfully connected to service"

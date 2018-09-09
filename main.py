@@ -3,6 +3,7 @@ import datetime
 import time
 from database_interface import database_interface
 from date_pricing import historical_pricing
+from price_fetch import quotes
 import urllib
 import csv
 import get_quotes
@@ -86,7 +87,7 @@ class trending_value_screen():
         #Returns current and previous price for a company based on passed ticker symbol and list of dates
         chng = 'NULL'
 
-        status, prices = get_quotes.download_quotes(ticker, date_list[1], date_list[0])
+        status, prices = quotes.price_fetch(ticker, date_list[1], date_list[0])
 
         if status:
             chng = round(((prices[1]-prices[0])/prices[0])*100,2)
@@ -99,6 +100,15 @@ class trending_value_screen():
     def tsx_ticker_list(self):
 
         query = "Select Symbol from tsx_companies_2"
+        companies = self.dtb.db_fetch(query)
+
+        print len(companies)
+
+        return companies
+
+    def US_ticker_list(self):
+
+        query = "Select ticker from US_companies"
         companies = self.dtb.db_fetch(query)
 
         print len(companies)
@@ -142,14 +152,14 @@ class trending_value_screen():
 
 
             if metric == 'Price/Earnings':
-                query = "Insert into `rankings_2` (`Ticker`, `Date`, `Description`, `{0}`) VALUES('{1}', '{2}', '{3}', '{4}')".format(metric,
+                query = "Insert into `rankings` (`Ticker`, `Date`, `Description`, `{0}`) VALUES('{1}', '{2}', '{3}', '{4}')".format(metric,
                                                                                                                                     company[0],
                                                                                                                                     company[1],
                                                                                                                                     company[2],
                                                                                                                                     rank
                                                                                                                                     )
             else:
-                query = "UPDATE `rankings_2` SET `{0}`= '{1}' where `Ticker` = '{2}' AND `Date`= '{3}' AND `Description`= '{4}'".format(metric,
+                query = "UPDATE `rankings` SET `{0}`= '{1}' where `Ticker` = '{2}' AND `Date`= '{3}' AND `Description`= '{4}'".format(metric,
                                                                                                                                    rank,
                                                                                                                                    company[0],
                                                                                                                                    company[1],
@@ -168,7 +178,7 @@ class trending_value_screen():
 
             rank = (1-(sample_size-index)/sample_size)*100
 
-            query = "UPDATE `rankings_2` SET `Six Month Change`= '{0}' where `Ticker` = '{1}' AND `Date`= '{2}' AND `Description`= '{3}'".format(rank,
+            query = "UPDATE `rankings` SET `Six Month Change`= '{0}' where `Ticker` = '{1}' AND `Date`= '{2}' AND `Description`= '{3}'".format(rank,
                                                                                                                                    company[0],
                                                                                                                                    company[1],
                                                                                                                                    company[2]
@@ -176,7 +186,7 @@ class trending_value_screen():
             self.dtb.query_handler(query)
 
 
-            query = "UPDATE `rankings_2` SET `Six Month Change` = '20' where `Date`= '{2}' AND `Six Month Change` is NULL".format(rank,
+            query = "UPDATE `rankings` SET `Six Month Change` = '20' where `Date`= '{2}' AND `Six Month Change` is NULL".format(rank,
                                                                                                                                    company[0],
                                                                                                                                    company[1],
                                                                                                                                    company[2]
@@ -188,14 +198,14 @@ class trending_value_screen():
 
         print 'tallying overall scores'
 
-        overall_query = "SELECT * from `rankings_2` where `Date` = '{0}'".format(str(date))
+        overall_query = "SELECT * from `rankings` where `Date` = '{0}'".format(str(date))
         data = self.dtb.db_fetch(overall_query)
 
         for company in data:
 
             score = (sum([float(company[i]) for i in range(5,11)]))/600.0*100
 
-            update_query = "UPDATE `rankings_2` SET `Overall` = '{0}' where `Ticker`= '{1}' AND `Date`= '{2}'".format(score,
+            update_query = "UPDATE `rankings` SET `Overall` = '{0}' where `Ticker`= '{1}' AND `Date`= '{2}'".format(score,
                                                                                                                        company[1],
                                                                                                                        date)
             self.dtb.query_handler(update_query)
@@ -203,7 +213,7 @@ class trending_value_screen():
 
     def upload(self,ticker,data_dict):
 
-        query = "INSERT INTO `results_2`(`Ticker`, `Date`,`Description`,`Price/Earnings`, `Price/Sales`, `Price/Book`, `Dividend Yield`, `EBITDA/MC` , `Six Month Change`) VALUES ('"+ ticker[0] +"','" + str(self.CurrentDate)+"','"
+        query = "INSERT INTO `results`(`Ticker`, `Date`,`Description`,`Price/Earnings`, `Price/Sales`, `Price/Book`, `Dividend Yield`, `EBITDA/MC` , `Six Month Change`) VALUES ('"+ ticker[0] +"','" + str(self.CurrentDate)+"','"
 
         for entry in self.key:
             try:
@@ -217,7 +227,7 @@ class trending_value_screen():
 
     def data_ranker(self, date):
 
-        base_query = "SELECT `Ticker`, `Date`, `Description`, `{0}` from `results_2` where `Date` = '{1}' ORDER BY `{2}`"
+        base_query = "SELECT `Ticker`, `Date`, `Description`, `{0}` from `results` where `Date` = '{1}' ORDER BY `{2}`"
 
         metrics = ['Price/Earnings',
                    'Price/Sales',
@@ -233,7 +243,7 @@ class trending_value_screen():
         #     self.score_assign(d, metric)
 
         # rank 6 month change
-        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results_2` where `Date` = '{}' AND `Six Month Change` <> 0 order by `Six Month Change`".format(str(self.CurrentDate))
+        query = "SELECT `Ticker`, `Date`, `Description`, `Six Month Change` FROM `results` where `Date` = '{}' AND `Six Month Change` <> 0 order by `Six Month Change`".format(str(self.CurrentDate))
         d = self.dtb.db_fetch(query)
         self.sixmonth_score(d)
 
@@ -253,18 +263,18 @@ class trending_value_screen():
         #Fetch previous date obj
         prev_obj = self.hp.MonthDate(self.date_obj,6)
 
-        l = self.tsx_ticker_list()
+        l = self.US_ticker_list()
 
-        # for ticker in l:
-        #
-        #     delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
-        #     time.sleep(delay)
-        #     d = self.api_data_fetch(ticker[0])
-        #     price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
-        #     d['Six Month Change'] = str(price_change)
-        #
-        #     if d['Six Month Change'] != 'NULL':
-        #         self.upload(ticker, d)
+        for ticker in l:
+
+            delay = float(str(datetime.datetime.now()).split(":")[2])/10    #millisecond delay to avoid yahoo's anti scraping algorithms (ms)
+            time.sleep(delay)
+            d = self.api_data_fetch(ticker[0]) #TODO update to trevs finData API
+            price_change = self.sixmonth(ticker[0],[self.date_obj,prev_obj])
+            d['Six Month Change'] = str(price_change)
+
+            if d['Six Month Change'] != 'NULL':
+                self.upload(ticker, d)
 
         self.data_ranker(self.CurrentDate)
 

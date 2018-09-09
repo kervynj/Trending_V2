@@ -5,12 +5,16 @@ class quotes(object):
 	def __init__(self):
 		quandl.ApiConfig.api_key = 'aqaqfvVVypE4taXrqpZQ'
 		
-	def price_fetch(self, symbol, start_date, end_date):
+	def price_fetch(self, symbol, date, end_date=''):
 	
 		prices = []
 		succ = True
-		
-		response = 	quandl.get_table('SHARADAR/SEP', date='{0},{1}'.format(start_date,end_date), ticker=symbol)
+
+		if end_date == '':
+			response = quandl.get_table('SHARADAR/SEP', date='{0}'.format(str(date)), ticker=symbol)
+		else:
+			response = 	quandl.get_table('SHARADAR/SEP', date='{0},{1}'.format(str(date), str(end_date)), ticker=symbol)
+
 		data = response.to_dict()
 
 		for key,entry in enumerate(data['close']):
